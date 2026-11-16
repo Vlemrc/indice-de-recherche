@@ -1,0 +1,11 @@
+node_modules
+dist
+.DS_Store
+
+# Police Pricedown : licence bureau uniquement, ne pas publier le fichier
+public/fonts/*.otf
+
+.env
+.env.*
+!.env.example
+.vercel
