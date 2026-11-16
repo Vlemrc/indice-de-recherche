@@ -227,9 +227,10 @@ async function loadStats(login) {
   const day = since.toISOString().slice(0, 10);
 
   const me = await viewer();
-  // Choix assumé : la carte ne montre que les dépôts publics, même pour son propre
-  // compte, pour que personne n'expose ses dépôts privés sans le vouloir.
-  const mine = false;
+  // Par défaut la carte ne montre que les dépôts publics. Les dépôts privés ne sont
+  // inclus qu'en local, pour son propre compte, et sur demande : http://localhost:…/?prive
+  const wantsPrivate = import.meta.env.DEV && new URLSearchParams(location.search).has('prive');
+  const mine = wantsPrivate && Boolean(me) && me.toLowerCase() === user.login.toLowerCase();
   const repos = await ownRepos(user.login, user.public_repos, mine);
   const owned = repos.filter((r) => r.owner.login.toLowerCase() === user.login.toLowerCase());
   // Avec un jeton le quota est large : on compte les commits sur plus de dépôts.
