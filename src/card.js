@@ -37,6 +37,14 @@ function loadImage(src) {
 }
 
 // Palette inspirée d'un coucher de soleil tropical : bleu, violet, magenta, orange, jaune.
+// Emblème facultatif : si un fichier public/emblem.webp ou public/emblem.png existe,
+// il remplace l'étoile derrière le titre.
+let emblemPromise;
+function customEmblem() {
+  emblemPromise ??= loadImage('/emblem.webp').then((img) => img || loadImage('/emblem.png'));
+  return emblemPromise;
+}
+
 function sunset(c, y0, y1) {
   const g = c.createLinearGradient(0, y0, 0, y1);
   g.addColorStop(0, '#3f51c9');
@@ -138,8 +146,18 @@ function star(c, cx, cy, r, filled) {
 
 // Emblème de la carte : une étoile d'avis de recherche remplie du coucher de soleil,
 // avec le titre empilé par-dessus.
-function emblem(c) {
+function emblem(c, custom) {
   const cx = 800, cy = 236, r = 186;
+  if (custom) {
+    // Image d'emblème fournie par l'utilisateur (public/emblem.webp ou .png).
+    const scale = Math.min(430 / custom.naturalWidth, 380 / custom.naturalHeight);
+    const w = custom.naturalWidth * scale;
+    const h = custom.naturalHeight * scale;
+    c.imageSmoothingQuality = 'high';
+    c.drawImage(custom, cx - w / 2, cy - h / 2, w, h);
+    lockup(c, cx);
+    return;
+  }
   c.save();
   c.lineJoin = 'miter';
   starPath(c, cx, cy, r, 0.5);
@@ -156,7 +174,10 @@ function emblem(c) {
   c.lineWidth = 12;
   c.stroke();
   c.restore();
+  lockup(c, cx);
+}
 
+function lockup(c, cx) {
   c.textAlign = 'center';
   c.textBaseline = 'alphabetic';
   spacing(c, 1);
@@ -353,8 +374,9 @@ export async function drawCard(canvas, d) {
   canvas.width = W;
   canvas.height = H;
   const c = canvas.getContext('2d');
-  const [img] = await Promise.all([
+  const [img, custom] = await Promise.all([
     loadImage(d.avatar),
+    customEmblem(),
     document.fonts.load(anton(100)).catch(() => {}),
     document.fonts.load(inter(30, 600)).catch(() => {}),
     document.fonts.load(inter(30, 800)).catch(() => {}),
@@ -369,7 +391,7 @@ export async function drawCard(canvas, d) {
   c.translate((W * (1 - scale)) / 2, MARGIN_Y);
   c.scale(scale, scale);
   divider(c);
-  emblem(c);
+  emblem(c, custom);
   header(c, w);
   avatar(c, img, d);
   identity(c, d, w);
