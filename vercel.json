@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/gh-contrib/:login", "destination": "/api/contrib?login=:login" }]
+}
